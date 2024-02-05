@@ -54,6 +54,7 @@ public class CanvasView extends View {
         int width = Math.min(raw.getWidth(), editor.getWidth());
         bitmap = Bitmap.createBitmap(raw.getWidth(),raw.getHeight(),Bitmap.Config.ARGB_8888);
         canvas.setBitmap(bitmap);
+        matrix.setScale(0.5f, 0.5f);
         canvas.setMatrix(matrix);
         canvas.drawBitmap(raw,0,0,null);
         ConstraintLayout.LayoutParams layoutParams = new ConstraintLayout.LayoutParams(raw.getWidth(), raw.getHeight());
