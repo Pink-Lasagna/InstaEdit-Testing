@@ -20,7 +20,7 @@ import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.Constraints;
 
-public class CanvasView extends View {
+public class CanvasView extends View implements RotationGestureDetector.RotationListener {
     private Bitmap bitmap;
     private Canvas canvas = new Canvas();
     private Paint paint = new Paint();
@@ -28,6 +28,12 @@ public class CanvasView extends View {
     public Matrix matrix = new Matrix();
     public boolean blockcanv;
     private Editor editor;
+    float totalScale = 1f;
+    float pivotX;
+    float pivotY;
+    private RotationGestureDetector mRotationDetector;
+    private ScaleGestureDetector mScaleDetector;
+    float rotation = 0f;
 
     public CanvasView(Context context, AttributeSet atts) {
         super(context,atts);
@@ -40,24 +46,24 @@ public class CanvasView extends View {
         paint.setStrokeWidth(10);
         paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_IN));
         blockcanv = false;
+        mScaleDetector = new ScaleGestureDetector(context, new ScaleListener());
+        mRotationDetector = new RotationGestureDetector(this);
     }
     @Override
     protected void onDraw(@NonNull Canvas canvas) {
         canvas.save();
-        canvas.drawBitmap(bitmap,0,0,null);
+        matrix.setScale(totalScale, totalScale, pivotX, pivotY);
+        canvas.drawBitmap(bitmap,matrix,null);
         canvas.drawPath(path, paint);
         super.onDraw(canvas);
         canvas.restore();
     }
     public void addBitmap(Bitmap raw){
-        int height = Math.min(raw.getHeight(), editor.getHeight());
-        int width = Math.min(raw.getWidth(), editor.getWidth());
         bitmap = Bitmap.createBitmap(raw.getWidth(),raw.getHeight(),Bitmap.Config.ARGB_8888);
         canvas.setBitmap(bitmap);
-        matrix.setScale(0.5f, 0.5f);
         canvas.setMatrix(matrix);
-        canvas.drawBitmap(raw,0,0,null);
-        ConstraintLayout.LayoutParams layoutParams = new ConstraintLayout.LayoutParams(raw.getWidth(), raw.getHeight());
+        canvas.drawBitmap(raw,matrix,null);
+        ConstraintLayout.LayoutParams layoutParams = new ConstraintLayout.LayoutParams(getWidth(), getHeight());
         layoutParams.bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID;
         layoutParams.endToEnd = ConstraintLayout.LayoutParams.PARENT_ID;
         layoutParams.startToStart = ConstraintLayout.LayoutParams.PARENT_ID;
@@ -66,7 +72,8 @@ public class CanvasView extends View {
     }
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        if(blockcanv) return false;
+        mScaleDetector.onTouchEvent(event);
+        //mRotationDetector.onTouch(event);
         float xPos = event.getX();
         float yPos = event.getY();
         switch(event.getAction()){
@@ -76,26 +83,33 @@ public class CanvasView extends View {
             case MotionEvent.ACTION_MOVE:
                 path.lineTo(xPos,yPos);
                 break;
-            default:
-                return false;
         }
         invalidate();
         return true;
     }
-
     @Override
-    public boolean dispatchTouchEvent(MotionEvent event) {
-        switch(event.getAction()){
-            case 261:
-                blockcanv = true;
-                break;
-            case 6:
-                if(blockcanv){
-                    blockcanv = false;
-                }
-                break;
-        }
-        return super.dispatchTouchEvent(event);
+    public void onRotate(float deltaAngle) {
+        rotation += deltaAngle;
+        matrix.setRotate(rotation + deltaAngle);
     }
 
+    private class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
+        @Override
+        public boolean onScale(ScaleGestureDetector detector) {
+            totalScale *= detector.getScaleFactor();
+            return true;
+        }
+
+        @Override
+        public boolean onScaleBegin(ScaleGestureDetector detector) {
+            pivotX = detector.getFocusX();
+            pivotY = detector.getFocusY();
+            return true;
+        }
+
+        @Override
+        public void onScaleEnd(@NonNull ScaleGestureDetector detector) {
+            super.onScaleEnd(detector);
+        }
+    }
 }

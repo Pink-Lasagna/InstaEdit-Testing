@@ -21,12 +21,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 
-public class Editor extends AppCompatActivity implements RotationGestureDetector.RotationListener {
+public class Editor extends AppCompatActivity{
     CanvasView canv;
     int height;
     int width;
-    private RotationGestureDetector mRotationDetector;
-    private ScaleGestureDetector mScaleDetector;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         try {
@@ -38,11 +36,9 @@ public class Editor extends AppCompatActivity implements RotationGestureDetector
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_editor);
         Intent i = getIntent();
-        canv = (CanvasView) findViewById(R.id.canvasView);
+        canv = findViewById(R.id.canvasView);
         Uri uri = i.getParcelableExtra("imageuri");
         canv.addBitmap(uriToBitmap(uri));
-        mScaleDetector = new ScaleGestureDetector(this, new ScaleListener());
-        mRotationDetector = new RotationGestureDetector(this);
     }
     private Bitmap uriToBitmap(Uri uri){
         try {
@@ -55,45 +51,7 @@ public class Editor extends AppCompatActivity implements RotationGestureDetector
         }
     }
 
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        System.out.println(event.getY());
-        mScaleDetector.onTouchEvent(event);
-        //mRotationDetector.onTouch(event);
-        canv.invalidate();
-        return true;
-    }
 
-    @Override
-    public void onRotate(float deltaAngle) {
-        canv.setRotation(canv.getRotation() + deltaAngle);
-    }
-
-    private class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
-        float totalScale = 1f;
-        @Override
-        public boolean onScale(ScaleGestureDetector detector) {
-            totalScale *= detector.getScaleFactor();
-            canv.setScaleX(totalScale);
-            canv.setScaleY(totalScale);
-            return true;
-        }
-
-        @Override
-        public boolean onScaleBegin(ScaleGestureDetector detector) {
-            System.out.println(width + " " + canv.getWidth() + " " + detector.getFocusX());
-            System.out.println(height + " " + canv.getHeight()+ " " + detector.getFocusY());
-            canv.setPivotX(interDiffCoord(width,detector.getFocusX(),canv.getWidth()));
-            canv.getMeasuredHeightAndState();
-            canv.setPivotY(interDiffCoord(height,detector.getFocusY(),canv.getHeight()));
-            return true;
-        }
-
-        @Override
-        public void onScaleEnd(@NonNull ScaleGestureDetector detector) {
-            super.onScaleEnd(detector);
-        }
-    }
     private float interDiffCoord(float coordview, float coord, float whole){
         return whole/(coordview/coord);
     }
