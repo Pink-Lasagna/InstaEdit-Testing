@@ -5,11 +5,11 @@ import android.view.MotionEvent;
 public class RotationGestureDetector {
 
     public interface RotationListener {
-        public void onRotate(float deltaAngle);
+        void onRotate(float deltaAngle);
     }
 
     protected float mRotation;
-    private RotationListener mListener;
+    private final RotationListener mListener;
 
     public RotationGestureDetector(RotationListener listener) {
         mListener = listener;
