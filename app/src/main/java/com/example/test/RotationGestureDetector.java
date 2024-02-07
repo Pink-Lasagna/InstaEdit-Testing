@@ -22,7 +22,7 @@ public class RotationGestureDetector {
         return (float) Math.toDegrees(radians);
     }
 
-    public void onTouch(MotionEvent e) {
+    public void onTouchEvent(MotionEvent e) {
         if (e.getPointerCount() != 2) {
             return;
         }

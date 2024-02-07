@@ -28,9 +28,10 @@ public class CanvasView extends View implements RotationGestureDetector.Rotation
     private final RotationGestureDetector mRotationDetector;
     private final ScaleGestureDetector mScaleDetector;
     float rotation = 0f;
+    float startscale = 0f;
 
     public CanvasView(Context context, AttributeSet atts) {
-        super(context,atts);
+        super(context, atts);
         editor = (Editor) context;
         paint.setAlpha(0);
         paint.setAntiAlias(true);
@@ -43,49 +44,60 @@ public class CanvasView extends View implements RotationGestureDetector.Rotation
         mScaleDetector = new ScaleGestureDetector(context, new ScaleListener());
         mRotationDetector = new RotationGestureDetector(this);
     }
+
     @Override
     protected void onDraw(@NonNull Canvas canvas) {
         canvas.save();
-        matrix.setScale(totalScale, totalScale, pivotX, pivotY);
+        canvas.translate(((float) editor.getWidth() - bitmap.getWidth() * startscale) / 2f, ((float) editor.getHeight() - bitmap.getHeight() * startscale) / 2f);
+        canvas.scale(startscale, startscale);
         matrix.preRotate(rotation, pivotX, pivotY);
-        canvas.drawBitmap(bitmap,matrix,null);
+        matrix.setScale(totalScale, totalScale, pivotX, pivotY);
+        canvas.drawBitmap(bitmap, matrix, null);
         canvas.drawPath(path, paint);
         super.onDraw(canvas);
         canvas.restore();
     }
-    public void addBitmap(Bitmap raw){
-        float startscale = 0;
-        System.out.println(editor.getHeight());
-        System.out.println(editor.getWidth());
-        if((float)raw.getHeight()-editor.getHeight()>(float)raw.getWidth()-editor.getWidth()){
-            startscale = (float) editor.getHeight()/(raw.getHeight() * 2);
-        } else{
-            startscale = (float) editor.getWidth()/ (raw.getWidth()*2) ;
+
+    public void addBitmap(Bitmap raw) {
+        if ((float) raw.getHeight() - editor.getHeight() > (float) raw.getWidth() - editor.getWidth()) {
+            startscale = (float) editor.getHeight() / (raw.getHeight() * 1.5f);
+        } else {
+            startscale = (float) editor.getWidth() / (raw.getWidth() * 1.5f);
         }
-        System.out.println(startscale);
-        bitmap = Bitmap.createBitmap(raw.getWidth(),raw.getHeight(),Bitmap.Config.ARGB_8888);
+        bitmap = Bitmap.createBitmap(raw.getWidth(), raw.getHeight(), Bitmap.Config.ARGB_8888);
         canvas.setBitmap(bitmap);
         canvas.setMatrix(matrix);
-        canvas.drawBitmap(raw,matrix,null);
-        canvas.scale(startscale,startscale);
+        canvas.drawBitmap(raw, matrix, null);
     }
+
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        float[] pnts = {event.getX(), event.getY()};
+        Matrix m = new Matrix();
+        m.setTranslate(((float) editor.getWidth() - bitmap.getWidth() * startscale) / -2f, ((float) editor.getHeight() - bitmap.getHeight() * startscale) / -2f);
+        m.postScale(1f / startscale, 1f / startscale);
+        m.mapPoints(pnts);
+        Matrix n = new Matrix();
+        matrix.invert(n);
+        n.mapPoints(pnts);
+        event.setLocation(pnts[0], pnts[1]);
         mScaleDetector.onTouchEvent(event);
-        mRotationDetector.onTouch(event);
-        float xPos = event.getX();
-        float yPos = event.getY();
-        switch(event.getAction()){
+        //mRotationDetector.onTouch(event);
+        switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                path.moveTo(xPos,yPos);
+                path.moveTo(pnts[0], pnts[1]);
                 break;
             case MotionEvent.ACTION_MOVE:
-                path.lineTo(xPos,yPos);
+                path.lineTo(pnts[0], pnts[1]);
                 break;
+            default:
+                return false;
         }
+
         invalidate();
         return true;
     }
+
     @Override
     public void onRotate(float deltaAngle) {
         rotation += deltaAngle;
@@ -94,12 +106,13 @@ public class CanvasView extends View implements RotationGestureDetector.Rotation
     private class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
         @Override
         public boolean onScale(ScaleGestureDetector detector) {
-            totalScale *= detector.getScaleFactor();
+            totalScale = Math.min(Math.max(totalScale*detector.getScaleFactor(),1f),8f);
             return true;
         }
 
         @Override
         public boolean onScaleBegin(ScaleGestureDetector detector) {
+            System.out.println(pivotX + " " + pivotY);
             pivotX = detector.getFocusX();
             pivotY = detector.getFocusY();
             return true;
@@ -111,8 +124,4 @@ public class CanvasView extends View implements RotationGestureDetector.Rotation
         }
     }
 
-    @Override
-    public boolean isInEditMode() {
-        return super.isInEditMode();
-    }
 }

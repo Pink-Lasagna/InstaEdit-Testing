@@ -19,11 +19,15 @@ public class Editor extends AppCompatActivity{
     CanvasView canv;
     int height;
     int width;
+    int realheight;
+    int realwidth;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         try {
             height = getWindowHeight();
             width = getWindowWidth();
+            realheight = getRealWindowHeight();
+            realwidth = getRealWindowWidth();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -72,6 +76,14 @@ public class Editor extends AppCompatActivity{
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
         int width = displayMetrics.widthPixels;
         return width;
+    }
+
+    public int getRealHeight() {
+        return realheight;
+    }
+
+    public int getRealWidth() {
+        return realwidth;
     }
 
     public int getHeight(){
