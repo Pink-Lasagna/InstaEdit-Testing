@@ -5,11 +5,11 @@ import android.view.MotionEvent;
 public class RotationGestureDetector {
 
     public interface RotationListener {
-        void onRotate(float deltaAngle);
+        public void onRotate(float deltaAngle);
     }
 
     protected float mRotation;
-    private final RotationListener mListener;
+    private RotationListener mListener;
 
     public RotationGestureDetector(RotationListener listener) {
         mListener = listener;
@@ -22,7 +22,7 @@ public class RotationGestureDetector {
         return (float) Math.toDegrees(radians);
     }
 
-    public void onTouchEvent(MotionEvent e) {
+    public void onTouch(MotionEvent e) {
         if (e.getPointerCount() != 2) {
             return;
         }

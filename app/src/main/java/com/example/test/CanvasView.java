@@ -29,6 +29,8 @@ public class CanvasView extends View implements RotationGestureDetector.Rotation
     private final ScaleGestureDetector mScaleDetector;
     float rotation = 0f;
     float startscale = 0f;
+    float newtranslationX=0f;
+    float newtranslationY=0f;
 
     public CanvasView(Context context, AttributeSet atts) {
         super(context, atts);
@@ -48,11 +50,19 @@ public class CanvasView extends View implements RotationGestureDetector.Rotation
     @Override
     protected void onDraw(@NonNull Canvas canvas) {
         canvas.save();
-        canvas.translate(((float) editor.getWidth() - bitmap.getWidth() * startscale) / 2f, ((float) editor.getHeight() - bitmap.getHeight() * startscale) / 2f);
-        canvas.scale(startscale, startscale);
+        matrix.reset();
+        float translationX = ((float) editor.getWidth() - bitmap.getWidth() * startscale) / 2f;
+        float translationY = ((float) editor.getHeight() - bitmap.getHeight() * startscale) / 2f;
+        // Apply the initial scale to center and resize the image
+        matrix.preTranslate(translationX, translationY);
+        matrix.preTranslate(newtranslationX, newtranslationY);
+        matrix.preScale(startscale, startscale);
+
+        // Apply rotation and scaling with the correct order
+        matrix.preScale(totalScale, totalScale, pivotX, pivotY);
         matrix.preRotate(rotation, pivotX, pivotY);
-        matrix.setScale(totalScale, totalScale, pivotX, pivotY);
-        canvas.drawBitmap(bitmap, matrix, null);
+        canvas.concat(matrix);
+        canvas.drawBitmap(bitmap, 0, 0, null);
         canvas.drawPath(path, paint);
         super.onDraw(canvas);
         canvas.restore();
@@ -73,13 +83,9 @@ public class CanvasView extends View implements RotationGestureDetector.Rotation
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         float[] pnts = {event.getX(), event.getY()};
-        Matrix m = new Matrix();
-        m.setTranslate(((float) editor.getWidth() - bitmap.getWidth() * startscale) / -2f, ((float) editor.getHeight() - bitmap.getHeight() * startscale) / -2f);
-        m.postScale(1f / startscale, 1f / startscale);
-        m.mapPoints(pnts);
-        Matrix n = new Matrix();
-        matrix.invert(n);
-        n.mapPoints(pnts);
+        matrix.invert(matrix);
+        matrix.mapPoints(pnts);
+        matrix.invert(matrix);
         event.setLocation(pnts[0], pnts[1]);
         mScaleDetector.onTouchEvent(event);
         //mRotationDetector.onTouch(event);
