@@ -50,8 +50,6 @@ public class CanvasView extends View {
         canvas.restore();
     }
     public void addBitmap(Bitmap raw){
-        int height = Math.min(raw.getHeight(), editor.getHeight());
-        int width = Math.min(raw.getWidth(), editor.getWidth());
         bitmap = Bitmap.createBitmap(raw.getWidth(),raw.getHeight(),Bitmap.Config.ARGB_8888);
         canvas.setBitmap(bitmap);
         canvas.setMatrix(matrix);
