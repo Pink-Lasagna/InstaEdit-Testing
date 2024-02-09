@@ -28,12 +28,16 @@ public class Editor extends AppCompatActivity {
     CanvasView canv;
     int height;
     int width;
+    int realheight;
+    int realwidth;
     @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         try {
             height = getWindowHeight();
             width = getWindowWidth();
+            realheight = getRealWindowHeight();
+            realwidth = getRealWindowWidth();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -43,6 +47,7 @@ public class Editor extends AppCompatActivity {
         canv = findViewById(R.id.canvasView);
         ConstraintLayout constraintLayout = findViewById(R.id.canvasvonstraint);
         Uri uri = i.getParcelableExtra("imageuri");
+        Bitmap raw = uriToBitmap(uri);
         constraintLayout.setOnTouchListener(new MultiTouchListener());
         ConstraintLayout.LayoutParams params = new Constraints.LayoutParams(getWidth()*2, getHeight()*2);
         params.bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID;
@@ -63,20 +68,39 @@ public class Editor extends AppCompatActivity {
         }
     }
 
-
-    private int getWindowHeight() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    private int getRealWindowHeight() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         WindowManager w = getWindowManager();
         Display d = w.getDefaultDisplay();
         Point realSize = new Point();
         Display.class.getMethod("getRealSize", Point.class).invoke(d, realSize);
         return realSize.y;
     }
-    private int getWindowWidth() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    private int getRealWindowWidth() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         WindowManager w = getWindowManager();
         Display d = w.getDefaultDisplay();
         Point realSize = new Point();
         Display.class.getMethod("getRealSize", Point.class).invoke(d, realSize);
         return realSize.x;
+    }
+
+    private int getWindowHeight(){
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        return displayMetrics.heightPixels;
+    }
+
+    private int getWindowWidth(){
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        return displayMetrics.widthPixels;
+    }
+
+    public int getRealHeight() {
+        return realheight;
+    }
+
+    public int getRealWidth() {
+        return realwidth;
     }
 
     public int getHeight(){
